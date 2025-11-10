@@ -23,7 +23,6 @@ class DadosSensorBase(BaseModel):
 class DadosSensorCreate(DadosSensorBase):
     """
     Schema usado para a criação de um novo registro via API.
-    Herda a estrutura opcional do schema base.
     """
     pass
 
@@ -31,7 +30,6 @@ class DadosSensorCreate(DadosSensorBase):
 class DadosSensor(DadosSensorBase):
     """
     Schema completo, representando os dados como são armazenados e retornados pela API.
-    Inclui campos gerados pelo servidor.
     """
     id: str = Field(..., alias="_id", description="ID único do registro no banco de dados MongoDB.")
     timestamp: datetime.datetime = Field(..., description="Data e hora em que o registro foi recebido pelo servidor.")
@@ -39,3 +37,10 @@ class DadosSensor(DadosSensorBase):
     class Config:
         from_attributes = True
         populate_by_name = True
+
+class CreateResponse(BaseModel):
+    """
+    Schema de resposta padrão para operações de criação bem-sucedidas.
+    """
+    status: str = "sucesso"
+    id_inserido: str

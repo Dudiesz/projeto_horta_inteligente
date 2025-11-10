@@ -1,29 +1,42 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, HTTPException
 from app.modelos import esquemas
+# Importa o serviço que acabamos de criar
+from app.servicos import servico_banco_de_dados 
 
-# Cria um "roteador" que agrupará todas as rotas relacionadas a dados de sensores.
-# É uma boa prática para organizar o projeto.
+# Cria o roteador (isso já existia)
 router = APIRouter()
 
 @router.post(
     "/dados-sensores", 
-    response_model=esquemas.DadosSensorCreate, 
+    # Atualizamos o response_model para refletir o que realmente retornamos
+    response_model=esquemas.CreateResponse, 
     status_code=status.HTTP_201_CREATED,
-    summary="Recebe e processa dados de um sensor."
+    summary="Recebe e salva dados de um sensor."
 )
 async def criar_dados_sensor(dados: esquemas.DadosSensorCreate):
     """
-    Endpoint para receber dados de sensores.
+    Endpoint para receber e salvar dados de sensores.
 
-    - **Recebe**: um JSON com os dados do sensor, que deve seguir o esquema `DadosSensorCreate`.
-    - **Valida**: Automaticamente os tipos de dados e a estrutura da requisição.
-    - **Retorna**: Uma confirmação com os dados que foram recebidos.
+    - **Recebe**: JSON com dados do sensor (esquema DadosSensorCreate).
+    - **Valida**: Automaticamente pelo Pydantic (como antes).
+    - **Salva**: Chama o serviço para salvar no banco de dados (novo).
+    - **Retorna**: O ID do novo registro (novo).
     """
     
-    # Por enquanto, vamos apenas imprimir os dados no console para confirmar o recebimento.
-    # O .model_dump() converte o objeto Pydantic de volta para um dicionário Python.
-    print("Dados recebidos do dispositivo:", dados.model_dump())
+    # Esta linha ainda é útil para vermos a atividade no log
+    print(f"Dados recebidos do dispositivo: {dados.id_dispositivo}")
     
-    # A lógica para salvar no banco de dados será adicionada futuramente na camada de serviço.
+    # --- A GRANDE MUDANÇA ESTÁ AQUI ---
+    # Em vez de só printar, chamamos a função do serviço
+    inserted_id = servico_banco_de_dados.salvar_dados_sensor(dados)
     
-    return dados
+    # Se o serviço retornar None, algo deu errado (ex: banco offline)
+    if inserted_id is None:
+        # Retorna um erro HTTP 500 (Erro Interno do Servidor)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Ocorreu um erro interno ao salvar os dados no banco de dados."
+        )
+    
+    # Se tudo deu certo, retorna uma resposta de sucesso
+    return {"status": "sucesso", "id_inserido": str(inserted_id)}

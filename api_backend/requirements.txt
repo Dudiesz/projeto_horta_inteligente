@@ -17,3 +17,11 @@ google-generativeai==0.7.0
 
 # Integração com o Telegram
 python-telegram-bot==21.0.1
+
+# Bibliotecas para o Simulador
+requests==2.31.0
+
+# --- NOVO: Bibliotecas para o Dashboard (Streamlit) ---
+streamlit
+pandas
+plotly

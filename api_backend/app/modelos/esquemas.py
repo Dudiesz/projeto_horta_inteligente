@@ -19,10 +19,18 @@ class DadosSensorBase(BaseModel):
     fosforo: Optional[float] = Field(default=None, description="Nível de fósforo no solo em mg/kg ou ppm.")
     potassio: Optional[float] = Field(default=None, description="Nível de potássio no solo em mg/kg ou ppm.")
 
+    class Config:
+        """ 
+        Permite que o Pydantic ignore campos extras não definidos.
+        Isso é necessário para aceitar 'raw', 'timestamp', etc., do simulador.
+        """
+        extra = "ignore"
+
 
 class DadosSensorCreate(DadosSensorBase):
     """
     Schema usado para a criação de um novo registro via API.
+    Herda a estrutura opcional e a configuração 'extra = "ignore"' do schema base.
     """
     pass
 
@@ -30,6 +38,7 @@ class DadosSensorCreate(DadosSensorBase):
 class DadosSensor(DadosSensorBase):
     """
     Schema completo, representando os dados como são armazenados e retornados pela API.
+    Inclui campos gerados pelo servidor.
     """
     id: str = Field(..., alias="_id", description="ID único do registro no banco de dados MongoDB.")
     timestamp: datetime.datetime = Field(..., description="Data e hora em que o registro foi recebido pelo servidor.")
@@ -37,6 +46,7 @@ class DadosSensor(DadosSensorBase):
     class Config:
         from_attributes = True
         populate_by_name = True
+
 
 class CreateResponse(BaseModel):
     """
